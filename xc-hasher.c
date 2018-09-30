@@ -73,18 +73,34 @@ void create_new_proc_entry(void)  //use of void for no arguments is compulsory n
 static unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state )
 {
     u8 digit;
+    unsigned int sport;
+    unsigned int dport;
     struct udphdr *udp_header;
     struct tcphdr *tcp_header;
+   
+    if (!skb) 
+	   return NF_ACCEPT;
+
     struct iphdr *ip_header = (struct iphdr *)skb_network_header(skb);    
 
-    digit = devider;
+
     if (skb->mark == 0xff) { 
 	if (ip_header->protocol == 17) { 
-        	udp_header = (struct udphdr *)skb_transport_header(skb) + sizeof(struct iphdr);
+        	//udp_header = (struct udphdr *)(skb_transport_header(skb) + 20);
+		udp_header= (struct udphdr *)((__u32 *)ip_header+ ip_header->ihl); //this fixed the problem
+		sport = (unsigned int)ntohs(udp_header->source);
+		dport = (unsigned int)ntohs(udp_header->dest);
 		digit = (ip_header->saddr + ip_header->daddr + udp_header->dest + udp_header->source) % devider;
 	}else if(ip_header->protocol == 6) {
-        	tcp_header = (struct tcphdr *)skb_transport_header(skb) + sizeof(struct iphdr);
+        	//tcp_header = (struct tcphdr *)(skb_transport_header(skb) + 23);
+		tcp_header= (struct tcphdr *)((__u32 *)ip_header+ ip_header->ihl); //this fixed the problem
+		sport = (unsigned int)ntohs(tcp_header->source);
+		dport = (unsigned int)ntohs(tcp_header->dest);
 		digit = (ip_header->saddr + ip_header->daddr + tcp_header->dest + tcp_header->source) % devider;
+	}else {
+		dport = 0;
+		sport = 0;
+		digit = devider;
 	}
 
 	if (digit == 0) 
@@ -92,11 +108,11 @@ static unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_h
 	
 	skb->mark = digit;
         
-	printk(KERN_INFO "xc-hasher: snat packet (saddr:%d.%d.%d.%d, daddr:%d.%d.%d.%d, sport:%d, dport:%d, mark:%x) \n", 
+	printk(KERN_INFO "xc-hasher: saddr:%d.%d.%d.%d, daddr:%d.%d.%d.%d, sport:%u, dport:%u, mark:%x\n", 
 			NIPQUAD(ip_header->saddr), 
 			NIPQUAD(ip_header->daddr),
-			udp_header->source,	
-		        udp_header->dest,
+			sport,	
+		        dport,
 			skb->mark);
     }
     
