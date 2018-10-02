@@ -90,13 +90,13 @@ static unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_h
 		udp_header= (struct udphdr *)((__u32 *)ip_header+ ip_header->ihl); //this fixed the problem
 		sport = (unsigned int)ntohs(udp_header->source);
 		dport = (unsigned int)ntohs(udp_header->dest);
-		digit = (ip_header->saddr + ip_header->daddr + udp_header->dest + udp_header->source) % devider;
+		digit = (udp_header->dest + udp_header->source) % devider;
 	}else if(ip_header->protocol == 6) {
         	//tcp_header = (struct tcphdr *)(skb_transport_header(skb) + 23);
 		tcp_header= (struct tcphdr *)((__u32 *)ip_header+ ip_header->ihl); //this fixed the problem
 		sport = (unsigned int)ntohs(tcp_header->source);
 		dport = (unsigned int)ntohs(tcp_header->dest);
-		digit = (ip_header->saddr + ip_header->daddr + tcp_header->dest + tcp_header->source) % devider;
+		digit = (tcp_header->dest + tcp_header->source) % devider;
 	}else {
 		dport = 0;
 		sport = 0;

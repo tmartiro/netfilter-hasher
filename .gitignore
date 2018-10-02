@@ -1,0 +1,12 @@
+.cache.mk
+.tmp_versions/
+.xc-hasher.ko.cmd
+.xc-hasher.mod.o.cmd
+.xc-hasher.o.cmd
+Module.symvers
+modules.order
+nft.rules
+xc-hasher.ko
+xc-hasher.mod.o
+xc-hasher.o
+
